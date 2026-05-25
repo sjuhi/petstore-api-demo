@@ -1,0 +1,481 @@
+type: spec.insomnia.rest/5.0
+schema_version: "5.1"
+name: Petstore
+meta:
+  id: wrk_cebf62aa010c4a00a61089797c671e22
+  created: 1779692943866
+  modified: 1779692943866
+  description: ""
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_09f8b9d8b54213e5f48c14b4af417d0a3812cbb6
+    created: 1779692943868
+    modified: 1779692943868
+environments:
+  name: Base Environment
+  meta:
+    id: env_09f8b9d8b54213e5f48c14b4af417d0a3812cbb6
+    created: 1779692943868
+    modified: 1779692943868
+    isPrivate: false
+spec:
+  contents:
+    openapi: 3.0.3
+    info:
+      title: Pawsome Pet Store API
+      version: 2.1.0
+      description: >
+        A REST API for managing a pet store – browse available pets, place
+        orders, and manage customer accounts.
+      contact:
+        name: Pawsome Engineering
+        email: api@pawsome.dev
+    servers:
+      - url: https://sandbox.pawsome.dev/v2
+        description: Sandbox
+    tags:
+      - name: Pets
+        description: Browse and manage pets available in the store
+      - name: Orders
+        description: Place and track pet orders
+      - name: Customers
+        description: Manage customer accounts
+    paths:
+      /pets:
+        get:
+          tags:
+            - Pets
+          summary: List available pets
+          description: Returns a paginated list of pets filtered by availability status
+            and/or species. Defaults to showing all available pets with a limit
+            of 10.
+          operationId: listPets
+          parameters:
+            - name: status
+              in: query
+              description: Filter pets by availability status
+              schema:
+                type: string
+                enum:
+                  - available
+                  - pending
+                  - sold
+                default: available
+            - name: species
+              in: query
+              description: Filter by species type
+              schema:
+                type: string
+                enum:
+                  - dog
+                  - cat
+                  - bird
+                  - rabbit
+                  - fish
+            - name: limit
+              in: query
+              description: Maximum number of pets to return (max 50)
+              schema:
+                type: integer
+                default: 10
+          responses:
+            "200":
+              description: List of pets matching the filter criteria
+              content:
+                application/json:
+                  example:
+                    data:
+                      - id: pet_001
+                        name: Biscuit
+                        species: dog
+                        breed: Golden Retriever
+                        age_months: 8
+                        status: available
+                        price: 850
+                        tags:
+                          - puppy
+                          - vaccinated
+                          - friendly
+                      - id: pet_002
+                        name: Mochi
+                        species: cat
+                        breed: Scottish Fold
+                        age_months: 14
+                        status: available
+                        price: 620
+                        tags:
+                          - indoor
+                          - vaccinated
+                      - id: pet_003
+                        name: Kiwi
+                        species: bird
+                        breed: Sun Conure
+                        age_months: 6
+                        status: pending
+                        price: 450
+                        tags:
+                          - talking
+                          - colorful
+                    meta:
+                      total: 3
+                      limit: 10
+        post:
+          tags:
+            - Pets
+          summary: Add a new pet to the store
+          description: Creates a new pet listing in the store. The pet will be immediately
+            visible to customers once its status is set to `available`.
+          operationId: addPet
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  name: Dumpling
+                  species: rabbit
+                  breed: Holland Lop
+                  age_months: 4
+                  status: available
+                  price: 320
+                  tags:
+                    - fluffy
+                    - indoor
+                    - gentle
+          responses:
+            "201":
+              description: Pet successfully added to the store
+              content:
+                application/json:
+                  example:
+                    id: pet_004
+                    name: Dumpling
+                    species: rabbit
+                    breed: Holland Lop
+                    age_months: 4
+                    status: available
+                    price: 320
+                    created_at: 2026-04-24T09:15:00Z
+            "400":
+              description: Invalid input — required fields missing or values out of range
+      /pets/{petId}:
+        get:
+          tags:
+            - Pets
+          summary: Get a pet by ID
+          description: Returns full details for a single pet, including health records and
+            vaccination history.
+          operationId: getPetById
+          parameters:
+            - name: petId
+              in: path
+              required: true
+              description: The unique identifier of the pet
+              schema:
+                type: string
+              example: pet_001
+          responses:
+            "200":
+              description: Full pet profile including health records
+              content:
+                application/json:
+                  example:
+                    id: pet_001
+                    name: Biscuit
+                    species: dog
+                    breed: Golden Retriever
+                    age_months: 8
+                    status: available
+                    price: 850
+                    health_records:
+                      last_checkup: 2026-03-10
+                      vaccinations:
+                        - rabies
+                        - distemper
+                        - parvovirus
+            "404":
+              description: No pet found with the given ID
+        put:
+          tags:
+            - Pets
+          summary: Update a pet's details
+          description: Updates one or more fields on an existing pet listing. Commonly
+            used to change status (e.g. mark as `pending` when a sale is in
+            progress) or adjust pricing.
+          operationId: updatePet
+          parameters:
+            - name: petId
+              in: path
+              required: true
+              description: The unique identifier of the pet to update
+              schema:
+                type: string
+              example: pet_001
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  status: pending
+                  price: 799
+          responses:
+            "200":
+              description: Pet successfully updated
+              content:
+                application/json:
+                  example:
+                    id: pet_001
+                    name: Biscuit
+                    status: pending
+                    price: 799
+            "404":
+              description: No pet found with the given ID
+        delete:
+          tags:
+            - Pets
+          summary: Remove a pet from the store
+          description: Permanently removes a pet listing from the store. This action
+            cannot be undone. Only use when the pet record is no longer needed —
+            consider updating status to `sold` instead.
+          operationId: deletePet
+          parameters:
+            - name: petId
+              in: path
+              required: true
+              description: The unique identifier of the pet to remove
+              schema:
+                type: string
+              example: pet_001
+          responses:
+            "204":
+              description: Pet successfully removed — no content returned
+            "404":
+              description: No pet found with the given ID
+      /orders:
+        get:
+          tags:
+            - Orders
+          summary: List all orders
+          description: Returns all orders placed in the store, optionally filtered by
+            fulfillment status. Useful for tracking pending shipments or
+            reviewing order history.
+          operationId: listOrders
+          parameters:
+            - name: status
+              in: query
+              description: Filter orders by their current fulfillment status
+              schema:
+                type: string
+                enum:
+                  - pending
+                  - confirmed
+                  - shipped
+                  - delivered
+                  - cancelled
+          responses:
+            "200":
+              description: List of orders matching the filter criteria
+              content:
+                application/json:
+                  example:
+                    data:
+                      - id: ord_001
+                        pet_id: pet_002
+                        customer_id: cust_007
+                        status: confirmed
+                        total: 620
+                        created_at: 2026-04-20T14:22:00Z
+                      - id: ord_002
+                        pet_id: pet_003
+                        customer_id: cust_012
+                        status: pending
+                        total: 450
+                        created_at: 2026-04-23T09:05:00Z
+        post:
+          tags:
+            - Orders
+          summary: Place a new order
+          description: Creates a new order for a pet. The pet must have a status of
+            `available` at time of order — attempting to order a `pending` or
+            `sold` pet returns a 409.
+          operationId: placeOrder
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  pet_id: pet_001
+                  customer_id: cust_007
+                  quantity: 1
+                  notes: Please include a starter food sample.
+          responses:
+            "201":
+              description: Order successfully placed
+              content:
+                application/json:
+                  example:
+                    id: ord_003
+                    pet_id: pet_001
+                    customer_id: cust_007
+                    status: pending
+                    total: 850
+                    created_at: 2026-04-24T10:30:00Z
+            "400":
+              description: Invalid request body
+            "409":
+              description: Pet is no longer available for purchase
+      /orders/{orderId}:
+        get:
+          tags:
+            - Orders
+          summary: Get an order by ID
+          description: Returns full details for a single order, including the pet name,
+            estimated delivery date, and current fulfillment status.
+          operationId: getOrderById
+          parameters:
+            - name: orderId
+              in: path
+              required: true
+              description: The unique identifier of the order
+              schema:
+                type: string
+              example: ord_001
+          responses:
+            "200":
+              description: Full order details including estimated delivery
+              content:
+                application/json:
+                  example:
+                    id: ord_001
+                    pet_name: Mochi
+                    customer_id: cust_007
+                    status: confirmed
+                    total: 620
+                    estimated_delivery: 2026-04-27
+            "404":
+              description: No order found with the given ID
+        patch:
+          tags:
+            - Orders
+          summary: Update order status
+          description: Advances the fulfillment status of an order. Use this to move an
+            order through the pipeline — from `pending` to `confirmed`,
+            `shipped`, and finally `delivered`. To cancel, set status to
+            `cancelled`.
+          operationId: updateOrderStatus
+          parameters:
+            - name: orderId
+              in: path
+              required: true
+              description: The unique identifier of the order to update
+              schema:
+                type: string
+              example: ord_001
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  status: shipped
+          responses:
+            "200":
+              description: Order status successfully updated
+              content:
+                application/json:
+                  example:
+                    id: ord_001
+                    status: shipped
+                    updated_at: 2026-04-24T11:00:00Z
+            "404":
+              description: No order found with the given ID
+      /customers:
+        post:
+          tags:
+            - Customers
+          summary: Register a new customer
+          description: Creates a new customer account. The email address must be unique —
+            submitting a duplicate email returns a 409. The customer ID returned
+            here is used when placing orders.
+          operationId: createCustomer
+          requestBody:
+            required: true
+            content:
+              application/json:
+                example:
+                  name: Priya Sharma
+                  email: priya@example.com
+                  phone: +91-98765-43210
+                  address:
+                    street: 12 MG Road
+                    city: Bengaluru
+                    zip: "560001"
+                    country: IN
+          responses:
+            "201":
+              description: Customer account successfully created
+              content:
+                application/json:
+                  example:
+                    id: cust_015
+                    name: Priya Sharma
+                    email: priya@example.com
+                    created_at: 2026-04-24T10:45:00Z
+            "409":
+              description: A customer with this email address already exists
+      /customers/{customerId}:
+        get:
+          tags:
+            - Customers
+          summary: Get a customer by ID
+          description: Returns a customer's profile and their full order history,
+            including pet names and order statuses.
+          operationId: getCustomerById
+          parameters:
+            - name: customerId
+              in: path
+              required: true
+              description: The unique identifier of the customer
+              schema:
+                type: string
+              example: cust_007
+          responses:
+            "200":
+              description: Customer profile with order history
+              content:
+                application/json:
+                  example:
+                    id: cust_007
+                    name: Arjun Mehta
+                    email: arjun@example.com
+                    orders:
+                      - id: ord_001
+                        pet_name: Mochi
+                        status: confirmed
+                        total: 620
+            "404":
+              description: No customer found with the given ID
+        delete:
+          tags:
+            - Customers
+          summary: Delete a customer account
+          description: Permanently deletes a customer account and all associated data.
+            This action cannot be undone. Existing orders linked to this
+            customer are not automatically cancelled.
+          operationId: deleteCustomer
+          parameters:
+            - name: customerId
+              in: path
+              required: true
+              description: The unique identifier of the customer to delete
+              schema:
+                type: string
+              example: cust_007
+          responses:
+            "204":
+              description: Customer account successfully deleted — no content returned
+            "404":
+              description: No customer found with the given ID
+  meta:
+    id: spc_90b66afdc55e40a8a9e2402259ad9258
+    created: 1779692943867
+    modified: 1779693234735
